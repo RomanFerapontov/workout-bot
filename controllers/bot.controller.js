@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import TelegramBot from "node-telegram-bot-api";
 import stickers from "../views/stickers.js";
-import * as options from "../components/options.js";
+import * as options from "../components/keyboards.js";
 import { Message } from "../components/messages.js";
 import * as menu from "../components/menu.js";
 dotenv.config();
