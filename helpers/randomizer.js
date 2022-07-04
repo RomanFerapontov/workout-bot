@@ -1,105 +1,121 @@
-import { noLimitExcersises } from "../models/excercises.js";
 import {
-  warmupProtocols,
-  powerProtocols,
-  staminaProtocols,
-} from "../models/protcols.js";
-import { split } from "../models/split.js";
+  shouldersLimitExcercises,
+  kneesLimitExcercises,
+  lowerBackLimitExcercises,
+} from "../models/excercises.js";
+import { allExcercises } from "../models/excercises.js";
+import { protocols } from "../models/protcols.js";
+import { workoutParams } from "../models/workout.params.js";
+import { random, filter, shuffle } from "./helpers.js";
 
-const params = [
-  "bw",
-  "iron",
-  "knees",
-  "back",
-  "heavy",
-  "legs",
-  ["knees", "hips"],
-];
+const params = {
+  equipment: ["bw", "iron"],
+  healthLimit: [],
+  intensive: ["heavy"],
+  bodyPart: ["pull", "push", "abs"],
+};
 
-const workoutComponents = {
-  protocols: {
-    warmup: [],
-    power: [],
-    stamina: [],
+const components = {
+  warmup: {
+    protocol: protocols.warmup,
+    excercises: allExcercises.warmup,
   },
-  excercises: {
-    warmup: {},
-    power: [],
-    stamina: [],
+  power: { protocol: protocols.power, excercises: allExcercises.power },
+  stamina: {
+    protocol: protocols.stamina,
+    excercises: allExcercises.stamina,
   },
 };
 
 export class Randomizer {
-  constructor(...args) {
-    this.workoutParams = args[0];
-    this.excercises = workoutComponents.excercises;
-    this.protocols = workoutComponents.protocols;
-    this.intensive = workoutComponents.intensive;
+  constructor(params) {
+    this.params = params;
   }
 
-  random(data) {
-    if (Array.isArray(data)) {
-      return data[Math.floor(Math.random() * data.length)];
-    }
-    if (typeof data === "object") {
-      const keys = Object.keys(data);
-      const key = keys[Math.floor(Math.random() * keys.length)];
-      return key;
-    }
-  }
+  getProtocolsAndExcercises() {
+    const intensity = this.params.intensive;
+    const bodyPart = this.params.bodyPart;
 
-  getIntensive() {
-    if (this.workoutParams.includes("light")) {
-      this.intensive = "light";
-    } else if (this.workoutParams.includes("heavy")) {
-      this.intensive = "heavy";
+    for (let stage in components) {
+      let protocol = components[stage].protocol;
+      let excercises = components[stage].excercises;
+      // фильтр всех упражнений по интенсивности и плоскостям
+      filter(intensity, excercises);
+      filter(intensity, protocol);
+      filter(bodyPart, excercises[intensity]);
+
+      components[stage].protocol = this.randomProtocol(protocol[intensity]);
+      components[stage].excercises = this.randomExercises(
+        excercises[intensity],
+        stage
+      );
     }
   }
 
-  getProtocols() {
-    if (this.workoutParams.includes(this.intensive)) {
-      const warmup = warmupProtocols[this.intensive];
-      const power = powerProtocols[this.intensive];
-      const stamina = staminaProtocols[this.intensive];
+  // TBT 4 min, RND 5, AMRAP 6 min
+  randomProtocol(protocolObj) {
+    const protocolName = random(protocolObj);
+    const roundsQty = random(protocolObj[protocolName].qty);
+    const timeParam = protocolObj[protocolName].time;
 
-      const warmupRandom = this.random(warmup);
-      const powerRandom = this.random(power);
-      const staminaRandom = this.random(stamina);
-
-      this.protocols.warmup = `${warmupRandom} ${this.random(
-        warmup[warmupRandom]["qty"]
-      )} ${warmup[warmupRandom]["time"]}`;
-
-      this.protocols.power = `${powerRandom} ${this.random(
-        power[powerRandom]["qty"]
-      )} ${power[powerRandom]["time"]}`;
-
-      this.protocols.stamina = `${staminaRandom} ${this.random(
-        stamina[staminaRandom]["qty"]
-      )} ${stamina[staminaRandom]["time"]}`;
-
-      this.excercises.warmup = noLimitExcersises.warmup[this.intensive];
-      this.excercises.power = noLimitExcersises.power[this.intensive];
-      this.excercises.stamina = noLimitExcersises.stamina[this.intensive];
-    }
+    return `${protocolName} ${roundsQty} ${timeParam}`;
   }
 
-  filterBySplit(...excerciseTypes) {
-    for (let stage in this.excercises) {
-      Object.keys(this.excercises[stage]).forEach((type) => {
-        if (!excerciseTypes[0].includes(type)) {
-          delete this.excercises[stage][type];
-        }
+  randomExercises(excercisesObj, stage) {
+    const excersises = [];
+    const exQty = random(workoutParams[stage].exercisesQty);
+
+    for (let key in excercisesObj) {
+      excercisesObj[key].forEach((el) => {
+        const reps = random(workoutParams[stage].reps);
+
+        const healthFilter = (param, filterArray) => {
+          if (this.params.healthLimit.includes(param)) {
+            if (!filterArray.includes(el)) {
+              el = `${el} - ${reps}`;
+              excersises.push(el);
+            }
+            return;
+          }
+        };
+        healthFilter("arms", shouldersLimitExcercises);
+        healthFilter("knees", kneesLimitExcercises);
+        healthFilter("back", lowerBackLimitExcercises);
+
+        el = `${el} - ${reps}`;
+        excersises.push(el);
       });
     }
-  }
-
-  getExcercises() {
-    for (let key in this.excercises) {
-      const totalExcercises = Object.values(this.excercises[key])
-        .toString()
-        .split(",");
-      this.excercises[key] = totalExcercises;
-    }
+    console.log(excersises);
+    return shuffle(excersises).slice(0, exQty);
+    // which equipment
   }
 }
+
+const randomExercise = new Randomizer(params);
+// randomExercise.getIntensive();
+randomExercise.getProtocolsAndExcercises();
+// randomExercise.getProtocolsAndExercises();
+// randomExercise.filterBySplit(["knees", "hips"]);
+// randomExercise.getExcercises();
+
+console.log(components);
+
+// console.log(randomExercise.random([5, 6, 7, 8]));
+
+/**
+Пример вывода:
+
+
+
+Разминка:
+TBT 4 min
+
+
+
+
+Фильтрация:
+1. интенсивность (исключить все heavy/light)
+2. оборудование (зависят от нагрузки и упражнений)
+3. упражнения (зависят от ограничений и сплита)
+ */
