@@ -5,17 +5,8 @@ export function random(data) {
   if (typeof data === "object") {
     const keys = Object.keys(data);
     const key = keys[Math.floor(Math.random() * keys.length)];
-    return key;
+    return data[key];
   }
-}
-
-export function filter(option, object) {
-  const arrayOfKeys = Object.keys(object);
-  arrayOfKeys.forEach((key) => {
-    if (!option.includes(key)) {
-      delete object[key];
-    }
-  });
 }
 
 export function shuffle(array) {
@@ -26,4 +17,19 @@ export function shuffle(array) {
     array[j] = temp;
   }
   return array;
+}
+
+export function equipmentFilter(array) {
+  return array.filter((el) => {
+    if (el.split(" ")[0] !== "KB") {
+      return el;
+    }
+  });
+}
+
+export function reset(array) {
+  if (array.length !== 0) {
+    array.splice(0, array.length);
+  }
+  return;
 }
