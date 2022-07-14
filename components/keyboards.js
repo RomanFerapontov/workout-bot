@@ -50,6 +50,7 @@ export const restart = {
   reply_markup: JSON.stringify({
     inline_keyboard: [
       [{ text: menu.restart[0], callback_data: menu.restart[0] }],
+      [{ text: menu.restart[1], callback_data: menu.restart[1] }],
     ],
   }),
 };

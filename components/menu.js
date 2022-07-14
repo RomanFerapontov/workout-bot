@@ -10,4 +10,4 @@ export const body = [
 export const equipment = ["Body weight", "Body weight and kettlebells"];
 export const intensity = ["Light", "Heavy"];
 export const getWorkout = ["Reset options", "GET WORKOUT"];
-export const restart = ["Restart"];
+export const restart = ["Restart", "GET OTHER"];

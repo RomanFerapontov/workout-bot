@@ -94,7 +94,7 @@ export const start = () => {
       return;
     }
 
-    if (data == menu.getWorkout[1]) {
+    if (data == menu.getWorkout[1] || data == menu.restart[1]) {
       const WOD = new Randomizer(workoutParams);
       const wod = WOD.getWorkout();
       await bot.sendMessage(chatId, wod, options.restart);
